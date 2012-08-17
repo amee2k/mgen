@@ -39,9 +39,6 @@ Morse>
 #include <ctype.h>
 #include <stdint.h>
 
-// input buffer
-static char buf[100];
-
 
 // constants for implicit string concatenation
 // (redefine as empty strings to disable colors)
@@ -51,14 +48,19 @@ static char buf[100];
 
 
 // forward declarations
-static int8_t is_in(char needle, char *haystack);
 static void process_line(char *l);
 static void process_char(uint8_t x);
 static void charmap_info();
+
+// codeflow
+static int8_t is_in(char needle, char *haystack);
 static uint8_t arithmetic_right_shift(uint8_t x, uint8_t b);
 
 
+
+
 int main() {
+	static char buf[100]; 	// input buffer
 
 	charmap_info();
 
@@ -71,8 +73,8 @@ int main() {
 	printf("\t+            End of message\n");
 
 	printf("\n" HILIT "Input:" LOLIT "\n");
-	printf("\ta-z/A-Z/0-9  Characters\n");
-	printf("\t#            Prosign mark\n");
+	printf("\ta-z/A-Z/0-9  Characters (case insensitive)\n");
+	printf("\t#            Ligature mark (for prosign)\n");
 	printf("\t(blank)      Word separation\n");
 	printf("\t(newline)    End of message\n");
 
@@ -223,13 +225,6 @@ static void process_line(char *l) {
 	}
 }
 
-/* Decode character (table entry -> morse code):
- *
- *	- start of code is always at the LSB. the code is right-aligned
- *	- then shift and produce code elements until the buffer == code >>> 7
- *	- dit == 0; dah == 1
- *
- */
 
 static void process_char(uint8_t x) {
 	uint8_t j;
@@ -256,6 +251,9 @@ static void process_char(uint8_t x) {
 		j++;
 	}
 }
+
+
+
 
 
 // codeflow
