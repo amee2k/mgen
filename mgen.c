@@ -142,7 +142,7 @@ static char charmap[] = "ABCDEQR1$";
 
 /*
 
-C: - . . .
+C: - . - .
 
 Code:			0 0 0 0  0 1 0 1		(4 (length) bits right aligned)
 
