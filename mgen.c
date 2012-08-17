@@ -35,6 +35,7 @@ Morse>
 
 */
 
+
 #include <stdio.h>
 #include <ctype.h>
 #include <stdint.h>
@@ -48,7 +49,7 @@ Morse>
 
 
 // forward declarations
-static void process_line(char *l);
+static void process_line(char *line);
 static void process_char(uint8_t x);
 static void charmap_info();
 
@@ -78,6 +79,10 @@ int main() {
 	printf("\t(blank)      Word separation\n");
 	printf("\t(newline)    End of message\n");
 
+	if(msnd_init() != 0) {
+		printf("Failed to initialize audio device. Terminating.");
+		return -1;
+	}
 
 	while(1) {
 
@@ -91,6 +96,8 @@ int main() {
 		printf(" +\n");
 
 	}
+
+	msnd_deinit();
 
 	printf("\n");
 	return 0;
@@ -177,7 +184,7 @@ static uint8_t charsigns[] = {
 
 
 
-static void process_line(char *l) {
+static void process_line(char *line) {
 	uint8_t i, j;		// loop variables
 	char c;				// current character;
 	int8_t x;			// character index in charmap
@@ -187,9 +194,9 @@ static void process_line(char *l) {
 	// Note: the flag is not used  _iif_  i == 0  holds, so this is really redundant ;)
 	ps = 0;
 
-	for(i = 0; buf[i] != '\0'; i++) {
+	for(i = 0; line[i] != '\0'; i++) {
 		// loop over it char by char, normalize case
-		c = buf[i];
+		c = line[i];
 		c = toupper(c);
 
 		// find char in charmap

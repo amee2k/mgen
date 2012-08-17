@@ -8,11 +8,14 @@ clean:
 	-rm *.o
 
 
-mgen: mgen.o
-	gcc -o mgen mgen.o
+mgen: mgen.o msnd.o
+	gcc -o mgen -lSDL -lm  mgen.o msnd.o
 
-mgen.o: mgen.c
+mgen.o: mgen.c msnd.h
 	gcc -o mgen.o -c mgen.c
+
+msnd.o: msnd.c
+	gcc -o msnd.o -c msnd.c
 
 
 
