@@ -55,9 +55,12 @@ static int8_t is_in(char needle, char *haystack);
 static void process_line(char *l);
 static void process_char(uint8_t x);
 static void charmap_info();
+static uint8_t arithmetic_right_shift(uint8_t x, uint8_t b);
 
 
 int main() {
+
+	charmap_info();
 
 	printf("\n" HILIT "Symbols:" LOLIT "\n");
 	printf("\t.            Short mark (Dit!)\n");
@@ -98,26 +101,74 @@ int main() {
 
 
 // morse code character map
+/*
+ * A	2	.-
+ * B	4	-...
+ * C	4	-.-.
+ * D	3	-..
+ * E	1	.
+ * Q	4	--.-
+ * R	3	.--
+ * 1	5	.----
+ * $	7	...-..-
+ *
+ */
+
+/* Encode character (letter -> table entry):
+ *
+ *	- dit == 0; dah == 1
+ *	- start of code is always at the LSB. the code is right-aligned
+ *	- pad to 8 bits using the opposite of the last encoded bit for padding
+ *
+ */
+
+/* Decode character (table entry -> morse code):
+ *
+ *	- start of code is always at the LSB. the code is right-aligned
+ *	- then shift and produce code elements until the buffer == code >>> 7
+ *	- dit == 0; dah == 1
+ *
+ */
 
 #define DIT(tail) (0 | ((tail) << 1))
 #define DAH(tail) (1 | ((tail) << 1))
+#define FLIP 1
+#define NOFLIP 0
+#define CODEPOINT(tail, length) ( (tail & (1<<(length-1))) == 0 ? 0xFF : 0x00 )  &  ~( (1<<(length)) - 1 )  |  tail
 
-static char charmap[] = "ABCDEQR1";
+static char charmap[] = "ABCDEQR1$";
 
-static uint8_t charlens[] = {
-	2, 4, 4, 3, 1, 4, 3, 5,
-};
+/*
+
+C: - . . .
+
+Code:			0 0 0 0  0 1 0 1		(4 (length) bits right aligned)
+
+
+Padding:		1 1 1 1  1 1 1 1		(last encoded element is a dit = 0)
+Mask:			1 1 1 1  0 0 0 0		(4 (length) bits right aligned, then inverted)
+				----------------
+Padding & Mask: 1 1 1 1  0 0 0 0
+
+
+Code | PM:		1 1 1 1  0 1 0 1		( -> 245 )
+
+
+
+*/
+
 
 static uint8_t charsigns[] = {
 	// this probably looks better if you experiment a bit with spacing...
-	DIT(DAH(0)),
-	DAH(DIT(DIT(DIT(0)))),
-	DAH(DIT(DAH(DIT(0)))),
-	DAH(DIT(DIT(0))),
-	DIT(0),
-	DAH(DAH(DIT(DAH(0)))),
-	DIT(DAH(DAH(0))),
-	DIT(DAH(DAH(DAH(DAH(0))))),
+	CODEPOINT( DIT(DAH(0)),								2),	// A
+	CODEPOINT( DAH(DIT(DIT(DIT(0)))),					4),	// B
+	CODEPOINT( DAH(DIT(DAH(DIT(0)))),					4),	// C
+	CODEPOINT( DAH(DIT(DIT(0))),						3),	// D
+	CODEPOINT( DIT(0),									1),	// E
+	CODEPOINT( DAH(DAH(DIT(DAH(0)))),					4),	// Q
+	CODEPOINT( DIT(DAH(DAH(0))),						3),	// R
+	CODEPOINT( DIT(DAH(DAH(DAH(DAH(0))))),				5),	// 1
+	CODEPOINT( DIT(DIT(DIT(DAH(DIT(DIT(DAH(0))))))),	5),	// $
 };
 
 
@@ -172,36 +223,57 @@ static void process_line(char *l) {
 	}
 }
 
+/* Decode character (table entry -> morse code):
+ *
+ *	- start of code is always at the LSB. the code is right-aligned
+ *	- then shift and produce code elements until the buffer == code >>> 7
+ *	- dit == 0; dah == 1
+ *
+ */
+
 static void process_char(uint8_t x) {
 	uint8_t j;
 	uint8_t s;
+	uint8_t marker;
 
 	// get encoded morse code sign from charmap
 	s = charsigns[x];
 
-	// loop over each element in the sign
-	for(j = 0; j < charlens[x]; j++) {
+	// calculate mask (if the buffer looks like this, we are done with the character)
+	marker = arithmetic_right_shift(s, 7);
+
+	// loop over each element
+	while(s != marker) {
 
 		// emit inter-element separator unless first element
 		if(j != 0) printf(" "); // single space
 
 		// emit actual code element
-		if( (s & 0x01) == DAH(0) ) printf("-"); else printf(".");
+		if( s & 0x01 ) printf("-"); else printf(".");
 
 		// shift temporary variable to next element
-		s >>= 1;
+		s = arithmetic_right_shift(s, 1);
+		j++;
 	}
 }
 
 
 // codeflow
 
+static uint8_t arithmetic_right_shift(uint8_t x, uint8_t b) {
+	while(b != 0) {
+		x = (x & 0x80) | (x >> 1);
+		b--;
+	}
+	return x;
+}
+
 static void charmap_info() {
 	uint8_t i;
 
-	printf(HILIT "Charmap" LOLIT " (database is %d bytes):\n", (int)(sizeof(charmap) + sizeof(charsigns) + sizeof(charlens)));
+	printf(HILIT "Charmap" LOLIT " (database is %d bytes):\n", (int)(sizeof(charmap) + sizeof(charsigns)));
 	for(i = 0; charmap[i] != '\0'; i++) {
-		printf("\t%c: bitmap %d, length %d\n", charmap[i], charsigns[i], charlens[i]);
+		printf("\t%c: bitmap %d\n", charmap[i], charsigns[i]);
 	}
 }
 
