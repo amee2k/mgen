@@ -193,8 +193,6 @@ int main() {
 #define NOFLIP 0
 #define CODEPOINT(tail, length) ( (tail & (1<<(length-1))) == 0 ? 0xFF : 0x00 )  &  ~( (1<<(length)) - 1 )  |  tail
 
-static char charmap[] = "ABCDEQR1$";
-
 /*
 
 C: - . - .
@@ -214,19 +212,64 @@ Code | PM:		1 1 1 1  0 1 0 1		( -> 245 )
 
 */
 
-
 static uint8_t charsigns[] = {
-	// this probably looks better if you experiment a bit with spacing...
-	CODEPOINT( DIT(DAH(0)),								2),	// A
-	CODEPOINT( DAH(DIT(DIT(DIT(0)))),					4),	// B
-	CODEPOINT( DAH(DIT(DAH(DIT(0)))),					4),	// C
-	CODEPOINT( DAH(DIT(DIT(0))),						3),	// D
-	CODEPOINT( DIT(0),									1),	// E
-	CODEPOINT( DAH(DAH(DIT(DAH(0)))),					4),	// Q
-	CODEPOINT( DIT(DAH(DAH(0))),						3),	// R
-	CODEPOINT( DIT(DAH(DAH(DAH(DAH(0))))),				5),	// 1
-	CODEPOINT( DIT(DIT(DIT(DAH(DIT(DIT(DAH(0))))))),	5),	// $
+	CODEPOINT( DIT(DAH(0)), 2),	// A
+	CODEPOINT( DAH(DIT(DIT(DIT(0)))), 4),	// B
+	CODEPOINT( DAH(DIT(DAH(DIT(0)))), 4),	// C
+	CODEPOINT( DAH(DIT(DIT(0))), 3),	// D
+	CODEPOINT( DIT(0), 1),	// E
+	CODEPOINT( DIT(DIT(DAH(DIT(0)))), 4),	// F
+	CODEPOINT( DAH(DAH(DIT(0))), 3),	// G
+	CODEPOINT( DIT(DIT(DIT(DIT(0)))), 4),	// H
+	CODEPOINT( DIT(DIT(0)), 2),	// I
+	CODEPOINT( DIT(DAH(DAH(DAH(0)))), 4),	// J
+	CODEPOINT( DAH(DIT(DAH(0))), 3),	// K
+	CODEPOINT( DIT(DAH(DIT(DIT(0)))), 4),	// L
+	CODEPOINT( DAH(DAH(0)), 2),	// M
+	CODEPOINT( DAH(DIT(0)), 2),	// N
+	CODEPOINT( DAH(DAH(DAH(0))), 3),	// O
+	CODEPOINT( DIT(DAH(DAH(DIT(0)))), 4),	// P
+	CODEPOINT( DAH(DAH(DIT(DAH(0)))), 4),	// Q
+	CODEPOINT( DIT(DAH(DIT(0))), 3),	// R
+	CODEPOINT( DIT(DIT(DIT(0))), 3),	// S
+	CODEPOINT( DAH(0), 1),	// T
+	CODEPOINT( DIT(DIT(DAH(0))), 3),	// U
+	CODEPOINT( DIT(DIT(DIT(DAH(0)))), 4),	// V
+	CODEPOINT( DIT(DAH(DAH(0))), 3),	// W
+	CODEPOINT( DAH(DIT(DIT(DAH(0)))), 4),	// X
+	CODEPOINT( DAH(DIT(DAH(DAH(0)))), 4),	// Y
+	CODEPOINT( DAH(DAH(DIT(DIT(0)))), 4),	// Z
+	CODEPOINT( DIT(DAH(DAH(DAH(DAH(0))))), 5),	// 1
+	CODEPOINT( DIT(DIT(DAH(DAH(DAH(0))))), 5),	// 2
+	CODEPOINT( DIT(DIT(DIT(DAH(DAH(0))))), 5),	// 3
+	CODEPOINT( DIT(DIT(DIT(DIT(DAH(0))))), 5),	// 4
+	CODEPOINT( DIT(DIT(DIT(DIT(DIT(0))))), 5),	// 5
+	CODEPOINT( DAH(DIT(DIT(DIT(DIT(0))))), 5),	// 6
+	CODEPOINT( DAH(DAH(DIT(DIT(DIT(0))))), 5),	// 7
+	CODEPOINT( DAH(DAH(DAH(DIT(DIT(0))))), 5),	// 8
+	CODEPOINT( DAH(DAH(DAH(DAH(DIT(0))))), 5),	// 9
+	CODEPOINT( DAH(DAH(DAH(DAH(DAH(0))))), 5),	// 0
+	CODEPOINT( DIT(DAH(DIT(DAH(DIT(DAH(0)))))), 6),	// .
+	CODEPOINT( DAH(DAH(DIT(DIT(DAH(DAH(0)))))), 6),	// ,
+	CODEPOINT( DIT(DIT(DAH(DAH(DIT(DIT(0)))))), 6),	// ?
+	CODEPOINT( DIT(DAH(DAH(DAH(DAH(DIT(0)))))), 6),	// '
+	CODEPOINT( DAH(DIT(DAH(DIT(DAH(DAH(0)))))), 6),	// !
+	CODEPOINT( DAH(DIT(DIT(DAH(DIT(0))))), 5),	// /
+	CODEPOINT( DAH(DIT(DAH(DAH(DIT(0))))), 5),	// (
+	CODEPOINT( DAH(DIT(DAH(DAH(DIT(DAH(0)))))), 6),	// )
+	CODEPOINT( DIT(DAH(DIT(DIT(DIT(0))))), 5),	// &
+	CODEPOINT( DAH(DAH(DAH(DIT(DIT(DIT(0)))))), 6),	// :
+	CODEPOINT( DAH(DIT(DAH(DIT(DAH(DIT(0)))))), 6),	// ;
+	CODEPOINT( DAH(DIT(DIT(DIT(DAH(0))))), 5),	// =
+	CODEPOINT( DIT(DAH(DIT(DAH(DIT(0))))), 5),	// +
+	CODEPOINT( DAH(DIT(DIT(DIT(DIT(DAH(0)))))), 6),	// -
+	CODEPOINT( DIT(DIT(DAH(DAH(DIT(DAH(0)))))), 6),	// _
+	CODEPOINT( DIT(DAH(DIT(DIT(DAH(DIT(0)))))), 6),	// "
+	CODEPOINT( DIT(DIT(DIT(DAH(DIT(DIT(DAH(0))))))), 7),	// $
+	CODEPOINT( DIT(DAH(DAH(DIT(DAH(DIT(0)))))), 6),	// @
 };
+
+static char charmap[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.,?\'!/()&:;=+-_\"$@";
 
 
 

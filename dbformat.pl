@@ -29,7 +29,7 @@ while(<>) {
 
 	$l = length($m);
 
-	print "\tCODEPOINT( $rep, $l);\t// $c\n";
+	print "\tCODEPOINT( $rep, $l),\t// $c\n";
 }
 
 $characters =~ s/"/\\"/;
