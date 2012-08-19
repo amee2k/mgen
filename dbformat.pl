@@ -3,40 +3,41 @@
 use warnings;
 use strict;
 
-# * A 2 .-
-# * B 4 -...
-# * C 4 -.-.
-#
-#	CODEPOINT( DIT(DAH(0)),								2),	// A
-#	CODEPOINT( DAH(DIT(DIT(DIT(0)))),					4),	// B
-
 my $characters = '';
 
-print "static uint8_t charsigns[] = {\n";
+print "#define _CHARDB_INTERNAL 1\n";
+print "#include \"chardb.h\"\n\n";
+print "uint8_t charsigns[] = {\n";
+
+my $maxlen = 5 * 8 + 1;
 
 while(<>) {
-	my($c, $l, $m) = /(.) ([1-7]) ([.-]+)/;
+	# strip comments
+	s/\/\/.+$//;
+	next if /^[ \t]*$/;
+	my($c, $m) = /(.)[ \t]+([.-]+)/;
 	next unless defined $m;
 
 	$characters .= $c;
+
+	my $l = length($m);
 
 	my $rep = '';
 	foreach( split m//, $m ) {
 		$rep .= ($_ eq '.' ? 'DIT(' : 'DAH(');
 	}
 	$rep .= '0';
-	$rep .= ')' x length($m);
+	$rep .= ')' x $l;
 
-	$l = length($m);
+	my $pad = ' ' x ($maxlen - length($rep));
 
-	print "\tCODEPOINT( $rep, $l),\t// $c\n";
+	print "\tCODEPOINT( $rep,$pad $l),\t// $c\n";
 }
 
 $characters =~ s/"/\\"/;
-$characters =~ s/'/\\'/;
 
 print "};\n\n";
-print "static char charmap[] = \"$characters\";\n";
-
+print "char charmap[] = \"$characters\";\n";
+print "int chardbsize = sizeof(charmap) + sizeof(charsigns);\n";
 
 

@@ -1,44 +1,12 @@
 // mgen.c
 
-/*
 
-tloch@beagle:~/tmp/mgen$ gcc -o mgen mgen.c 
-tloch@beagle:~/tmp/mgen$ ./mgen
-Charmap (database is 25 bytes):
-	A: bitmap 2, length 2
-	B: bitmap 1, length 4
-	C: bitmap 5, length 4
-	D: bitmap 1, length 3
-	E: bitmap 0, length 1
-	Q: bitmap 11, length 4
-	R: bitmap 6, length 3
-	1: bitmap 30, length 5
-
-Symbols:
-	.            Short mark (Dit!)
-	-            Long mark (Dah!)
-	(1 blank)    Inter-element separation
-	(3 blanks)   Letter separation
-	(7 blanks)   Word separation
-	+            End of message
-
-Input:
-	a-z/A-Z/0-9  Characters
-	#            Prosign mark
-	(blank)      Word separation
-	(newline)    End of message
-
-Morse> CQ CQ CQ DE A1AA A1AA A#R
-- . - .   - - . -          - . - .   - - . -          - . - .   - - . -          - . .   .          . -   . - - - -   . -   . -          . -   . - - - -   . -   . -          . - . - - +
-
-Morse> 
-
-*/
-
+#include "chardb.h"
 
 #include <stdio.h>
 #include <ctype.h>
 #include <stdint.h>
+
 
 
 // constants for implicit string concatenation
@@ -110,67 +78,6 @@ int main() {
 
 
 
-
-// morse code character map
-/*
- * A 2 .-
- * B 4 -...
- * C 4 -.-.
- * D 3 -..
- * E 1 .
- * F 4 ..-.
- * G 3 --.
- * H 4 ....
- * I 2 ..
- * J 4 .---
- * K 3 -.-
- * L 4 .-..
- * M 2 --
- * N 2 -.
- * O 3 ---
- * P 4 .--.
- * Q 4 --.-
- * R 3 .-.
- * S 3 ...
- * T 1 -
- * U 3 ..-
- * V 4 ...-
- * W 3 .--
- * X 4 -..-
- * Y 4 -.--
- * Z 4 --..
- *
- * 1 5 .----
- * 2 5 ..---
- * 3 5 ...--
- * 4 5 ....-
- * 5 5 .....
- * 6 5 -....
- * 7 5 --...
- * 8 5 ---..
- * 9 5 ----.
- * 0 5 -----
- *
- * . 6 .-.-.-
- * , 6 --..--
- * ? 6 ..--..
- * ' 6 .----.
- * ! 6 -.-.--
- * / 5 -..-.
- * ( 5 -.--.
- * ) 6 -.--.-
- * & 5 .-...
- * : 6 ---...
- * ; 6 -.-.-.
- * = 5 -...-
- * + 5 .-.-.
- * - 6 -....-
- * _ 6 ..--.-
- * " 6 .-..-.
- * $ 7 ...-..-
- * @ 6 .--.-.
- *
- */
 /* Encode character (letter -> table entry):
  *
  *	- dit == 0; dah == 1
@@ -186,91 +93,6 @@ int main() {
  *	- dit == 0; dah == 1
  *
  */
-
-#define DIT(tail) (0 | ((tail) << 1))
-#define DAH(tail) (1 | ((tail) << 1))
-#define FLIP 1
-#define NOFLIP 0
-#define CODEPOINT(tail, length) ( (tail & (1<<(length-1))) == 0 ? 0xFF : 0x00 )  &  ~( (1<<(length)) - 1 )  |  tail
-
-/*
-
-C: - . - .
-
-Code:			0 0 0 0  0 1 0 1		(4 (length) bits right aligned)
-
-
-Padding:		1 1 1 1  1 1 1 1		(last encoded element is a dit = 0)
-Mask:			1 1 1 1  0 0 0 0		(4 (length) bits right aligned, then inverted)
-				----------------
-Padding & Mask: 1 1 1 1  0 0 0 0
-
-
-Code | PM:		1 1 1 1  0 1 0 1		( -> 245 )
-
-
-
-*/
-
-static uint8_t charsigns[] = {
-	CODEPOINT( DIT(DAH(0)), 2),	// A
-	CODEPOINT( DAH(DIT(DIT(DIT(0)))), 4),	// B
-	CODEPOINT( DAH(DIT(DAH(DIT(0)))), 4),	// C
-	CODEPOINT( DAH(DIT(DIT(0))), 3),	// D
-	CODEPOINT( DIT(0), 1),	// E
-	CODEPOINT( DIT(DIT(DAH(DIT(0)))), 4),	// F
-	CODEPOINT( DAH(DAH(DIT(0))), 3),	// G
-	CODEPOINT( DIT(DIT(DIT(DIT(0)))), 4),	// H
-	CODEPOINT( DIT(DIT(0)), 2),	// I
-	CODEPOINT( DIT(DAH(DAH(DAH(0)))), 4),	// J
-	CODEPOINT( DAH(DIT(DAH(0))), 3),	// K
-	CODEPOINT( DIT(DAH(DIT(DIT(0)))), 4),	// L
-	CODEPOINT( DAH(DAH(0)), 2),	// M
-	CODEPOINT( DAH(DIT(0)), 2),	// N
-	CODEPOINT( DAH(DAH(DAH(0))), 3),	// O
-	CODEPOINT( DIT(DAH(DAH(DIT(0)))), 4),	// P
-	CODEPOINT( DAH(DAH(DIT(DAH(0)))), 4),	// Q
-	CODEPOINT( DIT(DAH(DIT(0))), 3),	// R
-	CODEPOINT( DIT(DIT(DIT(0))), 3),	// S
-	CODEPOINT( DAH(0), 1),	// T
-	CODEPOINT( DIT(DIT(DAH(0))), 3),	// U
-	CODEPOINT( DIT(DIT(DIT(DAH(0)))), 4),	// V
-	CODEPOINT( DIT(DAH(DAH(0))), 3),	// W
-	CODEPOINT( DAH(DIT(DIT(DAH(0)))), 4),	// X
-	CODEPOINT( DAH(DIT(DAH(DAH(0)))), 4),	// Y
-	CODEPOINT( DAH(DAH(DIT(DIT(0)))), 4),	// Z
-	CODEPOINT( DIT(DAH(DAH(DAH(DAH(0))))), 5),	// 1
-	CODEPOINT( DIT(DIT(DAH(DAH(DAH(0))))), 5),	// 2
-	CODEPOINT( DIT(DIT(DIT(DAH(DAH(0))))), 5),	// 3
-	CODEPOINT( DIT(DIT(DIT(DIT(DAH(0))))), 5),	// 4
-	CODEPOINT( DIT(DIT(DIT(DIT(DIT(0))))), 5),	// 5
-	CODEPOINT( DAH(DIT(DIT(DIT(DIT(0))))), 5),	// 6
-	CODEPOINT( DAH(DAH(DIT(DIT(DIT(0))))), 5),	// 7
-	CODEPOINT( DAH(DAH(DAH(DIT(DIT(0))))), 5),	// 8
-	CODEPOINT( DAH(DAH(DAH(DAH(DIT(0))))), 5),	// 9
-	CODEPOINT( DAH(DAH(DAH(DAH(DAH(0))))), 5),	// 0
-	CODEPOINT( DIT(DAH(DIT(DAH(DIT(DAH(0)))))), 6),	// .
-	CODEPOINT( DAH(DAH(DIT(DIT(DAH(DAH(0)))))), 6),	// ,
-	CODEPOINT( DIT(DIT(DAH(DAH(DIT(DIT(0)))))), 6),	// ?
-	CODEPOINT( DIT(DAH(DAH(DAH(DAH(DIT(0)))))), 6),	// '
-	CODEPOINT( DAH(DIT(DAH(DIT(DAH(DAH(0)))))), 6),	// !
-	CODEPOINT( DAH(DIT(DIT(DAH(DIT(0))))), 5),	// /
-	CODEPOINT( DAH(DIT(DAH(DAH(DIT(0))))), 5),	// (
-	CODEPOINT( DAH(DIT(DAH(DAH(DIT(DAH(0)))))), 6),	// )
-	CODEPOINT( DIT(DAH(DIT(DIT(DIT(0))))), 5),	// &
-	CODEPOINT( DAH(DAH(DAH(DIT(DIT(DIT(0)))))), 6),	// :
-	CODEPOINT( DAH(DIT(DAH(DIT(DAH(DIT(0)))))), 6),	// ;
-	CODEPOINT( DAH(DIT(DIT(DIT(DAH(0))))), 5),	// =
-	CODEPOINT( DIT(DAH(DIT(DAH(DIT(0))))), 5),	// +
-	CODEPOINT( DAH(DIT(DIT(DIT(DIT(DAH(0)))))), 6),	// -
-	CODEPOINT( DIT(DIT(DAH(DAH(DIT(DAH(0)))))), 6),	// _
-	CODEPOINT( DIT(DAH(DIT(DIT(DAH(DIT(0)))))), 6),	// "
-	CODEPOINT( DIT(DIT(DIT(DAH(DIT(DIT(DAH(0))))))), 7),	// $
-	CODEPOINT( DIT(DAH(DAH(DIT(DAH(DIT(0)))))), 6),	// @
-};
-
-static char charmap[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.,?\'!/()&:;=+-_\"$@";
-
 
 
 
@@ -367,7 +189,7 @@ static uint8_t arithmetic_right_shift(uint8_t x, uint8_t b) {
 static void charmap_info() {
 	uint8_t i;
 
-	printf(HILIT "Charmap" LOLIT " (database is %d bytes):\n", (int)(sizeof(charmap) + sizeof(charsigns)));
+	printf(HILIT "Charmap" LOLIT " (database is %d bytes):\n", chardbsize);
 	for(i = 0; charmap[i] != '\0'; i++) {
 		printf("\t%c: bitmap %d\n", charmap[i], charsigns[i]);
 	}
