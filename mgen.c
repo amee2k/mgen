@@ -187,7 +187,7 @@ static uint8_t arithmetic_right_shift(uint8_t x, uint8_t b) {
 }
 
 static void charmap_info() {
-	uint8_t i;
+	int i;
 
 	printf(HILIT "Charmap" LOLIT " (database is %d bytes):\n", chardbsize);
 	for(i = 0; charmap[i] != '\0'; i++) {

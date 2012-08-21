@@ -6,6 +6,7 @@ all: mgen
 clean:
 	-rm mgen
 	-rm *.o
+	-rm chardb.c
 
 
 mgen: mgen.o msnd.o chardb.o
