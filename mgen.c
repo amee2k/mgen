@@ -2,6 +2,7 @@
 
 
 #include "chardb.h"
+#include "msnd.h"
 
 #include <stdio.h>
 #include <ctype.h>
@@ -14,7 +15,14 @@
 #define HILIT "\e[1m"
 #define LOLIT "\e[0m"
 
+#define BFO 1200
+#define WPM 20
 
+// paris standard
+static unsigned int cu = 1200000L / WPM; // duration of a code unit in microseconds
+
+#define KEYDN(u) msnd_push3(cu * (u), BFO)
+#define KEYUP(u) msnd_push3(cu * (u), 0)
 
 // forward declarations
 static void process_line(char *line);
@@ -33,6 +41,11 @@ int main() {
 
 	charmap_info();
 
+	printf("\n" HILIT "Timing:" LOLIT "\n");
+	printf("\tCode speed:  %u WPM\n", WPM);
+	printf("\tTiming unit: %u microseconds\n", cu);
+	printf("\tBFO:         %u Hz\n", BFO);
+
 	printf("\n" HILIT "Symbols:" LOLIT "\n");
 	printf("\t.            Short mark (Dit!)\n");
 	printf("\t-            Long mark (Dah!)\n");
@@ -46,13 +59,14 @@ int main() {
 	printf("\t#            Ligature mark (for prosign)\n");
 	printf("\t(blank)      Word separation\n");
 	printf("\t(newline)    End of message\n");
+	printf("\t^D           Exit program (close stdin)\n");
 
-	/*
 	if(msnd_init() != 0) {
 		printf("Failed to initialize audio device. Terminating.");
 		return -1;
 	}
-	*/
+
+	KEYDN(10);
 
 	while(1) {
 
@@ -64,6 +78,7 @@ int main() {
 
 		// emit end of message
 		printf(" +\n");
+		msnd_flush();
 
 	}
 
@@ -78,27 +93,8 @@ int main() {
 
 
 
-/* Encode character (letter -> table entry):
- *
- *	- dit == 0; dah == 1
- *	- start of code is always at the LSB. the code is right-aligned
- *	- pad to 8 bits using the opposite of the last encoded bit for padding
- *
- */
-
-/* Decode character (table entry -> morse code):
- *
- *	- start of code is always at the LSB. the code is right-aligned
- *	- then shift and produce code elements until the buffer == code >>> 7
- *	- dit == 0; dah == 1
- *
- */
-
-
-
-
 static void process_line(char *line) {
-	uint8_t i, j;		// loop variables
+	uint8_t i;			// loop variables
 	char c;				// current character;
 	int8_t x;			// character index in charmap
 	uint8_t ps;			// prosign flag
@@ -118,7 +114,10 @@ static void process_line(char *line) {
 			// not in charmap
 
 			// check if we have a space
-			if(c == ' ') printf("       "); // 7 spaces
+			if(c == ' ') {
+				printf("       "); // 7 spaces
+				KEYUP(7);
+			}
 
 			// check if we have a prosign mark
 			if(c == '#') ps = 1;
@@ -132,9 +131,11 @@ static void process_line(char *line) {
 			if(ps == 0) {
 				// letter spearator
 				printf("   "); // 3 spaces
+				KEYUP(3);
 			} else {
 				// inter-element separator (prosign)
 				printf(" "); // 1 space
+				KEYUP(1);
 			}
 		}
 
@@ -161,10 +162,19 @@ static void process_char(uint8_t x) {
 	while(s != marker) {
 
 		// emit inter-element separator unless first element
-		if(j != 0) printf(" "); // single space
+		if(j != 0) {
+			printf(" "); // single space
+			KEYUP(1);
+		}
 
 		// emit actual code element
-		if( s & 0x01 ) printf("-"); else printf(".");
+		if( s & 0x01 ) {
+			printf("-");
+			KEYDN(3);
+		} else {
+			printf(".");
+			KEYDN(1);
+		}
 
 		// shift temporary variable to next element
 		s = arithmetic_right_shift(s, 1);

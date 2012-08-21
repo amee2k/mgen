@@ -44,7 +44,7 @@ Code | PM:		1 1 1 1  0 1 0 1		( -> 245 )
 #define DAH(tail) (1 | ((tail) << 1))
 #define FLIP 1
 #define NOFLIP 0
-#define CODEPOINT(tail, length) ( (tail & (1<<(length-1))) == 0 ? 0xFF : 0x00 )  &  ~( (1<<(length)) - 1 )  |  tail
+#define CODEPOINT(tail, length) (( (tail & (1<<(length-1))) == 0 ? 0xFF : 0x00 )  &  ~( (1<<(length)) - 1 ))  |  tail
 
 #ifndef _CHARDB_INTERNAL
 extern char charmap[];
